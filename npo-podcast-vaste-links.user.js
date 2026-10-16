@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         NPO Podcast - Vaste links toevoegen
 // @namespace    https://podcast.npo.nl/
-// @version      1.0.3
+// @version      1.0.4
 // @updateURL    https://raw.githubusercontent.com/DavidBoogerd/ongelooflijke-redactietool/main/npo-podcast-vaste-links.user.js
 // @downloadURL  https://raw.githubusercontent.com/DavidBoogerd/ongelooflijke-redactietool/main/npo-podcast-vaste-links.user.js
 // @description  Voegt lokaal een vast HTML-blok toe aan de TinyMCE-omschrijving.
@@ -28,7 +28,10 @@
 📱 Volg David op <a href="https://www.linkedin.com/in/david-boogerd-44207a7b?originalSubdomain=nl">LinkedIn</a> of <a href="https://bsky.app/profile/davidboogerd.bsky.social">Blue Sky</a><br>
 📱 Volg Stefan op <a href="https://www.linkedin.com/in/stefan-paas-51373a5/">LinkedIn</a><br>
 <br>
-Relevante afleveringen:
+Relevante afleveringen:<br>
+🎧 #<br>
+🎧 #<br>
+🎧 #
 `;
 
     const MARKER = 'ongelooflijke-standaardlinks';
