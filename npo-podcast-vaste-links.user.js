@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         NPO Podcast - Vaste links toevoegen
 // @namespace    https://podcast.npo.nl/
-// @version      1.0.4
+// @version      1.0.5
 // @updateURL    https://raw.githubusercontent.com/DavidBoogerd/ongelooflijke-redactietool/main/npo-podcast-vaste-links.user.js
 // @downloadURL  https://raw.githubusercontent.com/DavidBoogerd/ongelooflijke-redactietool/main/npo-podcast-vaste-links.user.js
-// @description  Voegt lokaal een vast HTML-blok toe aan de TinyMCE-omschrijving.
+// @description  Voegt lokaal DOP- of DIDB-links toe aan de TinyMCE-omschrijving.
 // @match        https://podcast.npo.nl/admin/*
 // @grant        none
 // @run-at       document-idle
@@ -35,7 +35,17 @@ Relevante afleveringen:<br>
 `;
 
     const MARKER = 'ongelooflijke-standaardlinks';
+    const DIDB_LINKS_HTML = `
+<!-- dit-is-de-bijbel-standaardlinks -->
+<div>💭 Download <a href="https://www.eo.nl/artikel/gespreksvragen-bij-dit-is-de-bijbel?utm_source=podcast&amp;utm_medium=shownotes&amp;utm_campaign=dit_is_de_bijbel">gespreksvragen</a> bij 'Dit is de Bijbel'<br>
+🗃 <a href="https://www.eo.nl/campagne/welke-dit-is-de-bijbel-aflevering-luister-jij-vandaag">Handige tool</a> om het archief van 'Dit is de Bijbel' door te zoeken<br>
+📱 Volg David op <a href="https://www.instagram.com/davidboogerd/">Instagram</a> of <a href="https://www.linkedin.com/in/david-boogerd-44207a7b">LinkedIn</a><br><br>
+Relevante afleveringen:<br>
+🎧</div>
+`;
+    const DIDB_MARKER = 'dit-is-de-bijbel-standaardlinks';
     const BUTTON_ID = 'npo-vaste-links-button';
+    const DIDB_BUTTON_ID = 'npo-didb-links-button';
     const TOOLBAR_ID = 'npo-vaste-links-toolbar';
     const PREFIX = '[NPO vaste links]';
     const TWO_BLANK_LINES = '<p><br></p><p><br></p>';
@@ -260,7 +270,7 @@ Relevante afleveringen:<br>
         window.setTimeout(() => element.remove(), 4500);
     }
 
-    function addStandardLinks() {
+    function addStandardLinks(podcast = 'DOP') {
         const found = findDescriptionEditor();
         if (!found) {
             warn('Knop geklikt, maar de editor Omschrijving is niet gevonden.');
@@ -273,13 +283,19 @@ Relevante afleveringen:<br>
             log('Knop geklikt. Methode:', found.type,
                 'HTML-lengte:', currentHtml.length);
 
-            if (currentHtml.includes(MARKER)) {
+            const isDidb = podcast === 'DIDB';
+            const marker = isDidb ? DIDB_MARKER : MARKER;
+            if (currentHtml.includes(marker)) {
                 log('Marker gevonden; er wordt niets toegevoegd.');
-                toast('De vaste links staan al in deze omschrijving.');
+                toast(isDidb ? 'De DIDB-links staan al in deze omschrijving.' :
+                    'De vaste links staan al in deze omschrijving.');
                 return;
             }
 
-            const htmlToAdd = TWO_BLANK_LINES + STANDARD_LINKS_HTML.trim();
+            // DOP houdt zijn bestaande witregels. DIDB begint in een eigen blok,
+            // zonder extra lege alinea's vóór de drie regels.
+            const htmlToAdd = isDidb ? DIDB_LINKS_HTML.trim() :
+                TWO_BLANK_LINES + STANDARD_LINKS_HTML.trim();
             if (found.type === 'tinymce') addWithTinyMCE(found.editor, htmlToAdd);
             else addWithIframeFallback(found, htmlToAdd);
 
@@ -292,7 +308,8 @@ Relevante afleveringen:<br>
     }
 
     function placeButton() {
-        if (document.getElementById(BUTTON_ID)) return true;
+        if (document.getElementById(BUTTON_ID) &&
+            document.getElementById(DIDB_BUTTON_ID)) return true;
 
         const found = findDescriptionEditor();
         if (!found) return false;
@@ -305,11 +322,14 @@ Relevante afleveringen:<br>
         const toolbar = document.createElement('div');
         toolbar.id = TOOLBAR_ID;
         toolbar.style.marginBottom = '8px';
+        toolbar.style.display = 'flex';
+        toolbar.style.gap = '8px';
+        toolbar.style.flexWrap = 'wrap';
 
         const button = document.createElement('button');
         button.id = BUTTON_ID;
         button.type = 'button';
-        button.textContent = '🔗 Vaste links toevoegen';
+        button.textContent = 'DOPlinks toevoegen';
         button.title = 'Voeg het standaardblok onderaan de omschrijving toe';
         Object.assign(button.style, {
             border: '1px solid #777',
@@ -320,9 +340,16 @@ Relevante afleveringen:<br>
             cursor: 'pointer',
             font: '600 13px/1.2 system-ui, sans-serif'
         });
-        button.addEventListener('click', addStandardLinks);
+        button.addEventListener('click', () => addStandardLinks('DOP'));
+
+        const didbButton = button.cloneNode(true);
+        didbButton.id = DIDB_BUTTON_ID;
+        didbButton.textContent = 'DIDB links';
+        didbButton.title = 'Voeg de links voor Dit is de Bijbel onderaan de omschrijving toe';
+        didbButton.addEventListener('click', () => addStandardLinks('DIDB'));
 
         toolbar.appendChild(button);
+        toolbar.appendChild(didbButton);
         anchor.parentNode.insertBefore(toolbar, anchor);
         log('Knop geplaatst. Gevonden via:', found.type);
         return true;
